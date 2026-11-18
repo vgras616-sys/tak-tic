@@ -7,7 +7,9 @@
 
   const RING = 64;        // cases du circuit
   const SEG = 16;         // cases par secteur (une case de départ par secteur)
-  const HOME_END = 67;    // progression 64..67 = les 4 cases de la maison
+  const LAP = 64;         // 64 = retour sur sa case de départ : elle compte pour une case avant la maison
+  const HOME0 = 65;       // progression 65..68 = les 4 cases de la maison (cabane)
+  const HOME_END = 68;
   const KINDS = ['1', '2', '3', '5', '6', '8', '9', '10', '12', '-4', 'P', '7'];
   const NUM = { '1': 1, '2': 2, '3': 3, '5': 5, '6': 6, '8': 8, '9': 9, '10': 10, '12': 12 };
 
@@ -35,11 +37,11 @@
   function buildOcc(P, slots) {
     const o = new Array(RING).fill(null);
     P.forEach((a, s) => a.forEach((x, i) => {
-      if (x.p >= 0 && x.p < RING) o[ringOf(slots[s], x.p)] = [s, i];
+      if (x.p >= 0 && x.p <= LAP) o[ringOf(slots[s], x.p)] = [s, i];
     }));
     return o;
   }
-  const allHome = (P, s) => P[s].every(x => x.p >= RING);
+  const allHome = (P, s) => P[s].every(x => x.p >= HOME0);
   function homeFree(P, s, from, to) {
     for (let q = from; q <= to; q++) if (P[s].some(x => x.p === q)) return false;
     return true;
@@ -55,31 +57,33 @@
   }
 
   /* ---------- déplacements élémentaires ---------- */
-  // avancer de n cases (sens horaire). Retourne null si illégal.
+  // avancer de n cases (sens horaire). p = pas faits dans le tour en cours (0..64), 65..68 = maison.
+  // Après un tour, la case départ compte pour une case ; si la carte dépasse la maison (ou si elle est
+  // bloquée), le pion repart simplement pour un nouveau tour.
   function tryFwd(P, slots, occ, s, i, n) {
     const x = P[s][i], p = x.p;
     if (p < 0) return null;
-    const q = p + n;
-    if (q > HOME_END) return null;
-    if (p >= RING) {
-      if (!homeFree(P, s, p + 1, q)) return null;
+    if (p >= HOME0) {
+      const q = p + n;
+      if (q > HOME_END || !homeFree(P, s, p + 1, q)) return null;
       return { q, cap: null };
     }
-    const last = Math.min(q, RING - 1);
+    const q = p + n;
     let cap = null;
-    for (let k = p + 1; k <= last; k++) {
+    const check = (k, landing) => {
       const o = occ[ringOf(slots[s], k)];
-      if (!o) continue;
-      const y = P[o[0]][o[1]];
-      if (y.u) return null;                 // un pieu ne se dépasse pas et ne se mange pas
-      if (k === q) cap = o;                 // arrivée exacte sur un pion : on le mange
-    }
-    if (q >= RING) {
-      const o = occ[ringOf(slots[s], 0)];   // on traverse sa propre case de départ
-      if (o && P[o[0]][o[1]].u) return null;
-      if (!homeFree(P, s, RING, q)) return null;
-    }
-    return { q, cap };
+      if (!o || (o[0] === s && o[1] === i)) return true;
+      if (P[o[0]][o[1]].u) return false;      // un pieu ne se dépasse pas et ne se mange pas
+      if (landing) cap = o;
+      return true;
+    };
+    for (let k = p + 1; k <= Math.min(q, LAP); k++) if (!check(k, k === q)) return null;
+    if (q <= LAP) return { q, cap };
+    if (q <= HOME_END && homeFree(P, s, HOME0, q)) return { q, cap: null };   // entre dans la maison
+    const q2 = q - LAP;                                                        // sinon : nouveau tour
+    cap = null;
+    for (let k = 1; k <= q2; k++) if (!check(k, k === q2)) return null;
+    return { q: q2, cap };
   }
   function tryStart(P, slots, occ, s, i) {
     if (P[s][i].p !== -1) return null;
@@ -89,21 +93,21 @@
   }
   function tryBack(P, slots, occ, s, i) {
     const p = P[s][i].p;
-    if (p < 0 || p >= RING) return null;
+    if (p < 0 || p > LAP) return null;
     let cap = null;
     for (let d = 1; d <= 4; d++) {
-      const k = (p - d + RING) % RING;
+      const k = (((p - d) % RING) + RING) % RING;
       const o = occ[ringOf(slots[s], k)];
-      if (!o) continue;
+      if (!o || (o[0] === s && o[1] === i)) continue;
       if (P[o[0]][o[1]].u) return null;
       if (d === 4) cap = o;
     }
-    return { q: (p - 4 + RING) % RING, cap };
+    return { q: p - 4 < 0 ? p - 4 + RING : p - 4, cap };
   }
   function trySwap(P, s, i, t, j) {
     if (s === t && i === j) return false;
     const x = P[s][i], y = P[t][j];
-    if (x.p < 0 || x.p >= RING || y.p < 0 || y.p >= RING) return false;
+    if (x.p < 0 || x.p > LAP || y.p < 0 || y.p > LAP) return false;
     if (y.u && t !== s) return false;
     return true;
   }
@@ -111,18 +115,20 @@
   function step7(P, slots, s, i) {
     const x = P[s][i], p = x.p;
     if (p < 0) return null;
-    const q = p + 1;
-    if (q > HOME_END) return null;
     const occ = buildOcc(P, slots);
-    let cap = null;
-    if (p >= RING) {
-      if (!homeFree(P, s, q, q)) return null;
-    } else if (q < RING) {
-      cap = occ[ringOf(slots[s], q)];
-    } else { // q === 64 : traverse la case de départ
-      cap = occ[ringOf(slots[s], 0)];
-      if (cap && cap[0] === s && cap[1] === i) cap = null;
-      if (!homeFree(P, s, RING, RING)) return null;
+    let cap = null, q;
+    if (p >= HOME0) {
+      q = p + 1;
+      if (q > HOME_END || !homeFree(P, s, q, q)) return null;
+    } else if (p < LAP) {
+      q = p + 1;
+      const o = occ[ringOf(slots[s], q)];
+      if (o && !(o[0] === s && o[1] === i)) cap = o;
+    } else if (homeFree(P, s, HOME0, HOME0)) {
+      q = HOME0;                                    // sur sa case départ : entre dans la maison
+    } else {
+      q = 1;                                        // maison bloquée : repart pour un tour
+      cap = occ[ringOf(slots[s], 1)];
     }
     const Q = clonePawns(P);
     kill(Q, cap);
@@ -369,7 +375,7 @@
   }
 
   return {
-    RING, SEG, KINDS, NUM, setRng, shuffle, makeDeck,
+    RING, SEG, LAP, HOME0, HOME_END, KINDS, NUM, setRng, shuffle, makeDeck,
     ringOf, progOf, clonePawns, key, buildOcc, allHome, homeFree,
     partnerOf, teamOf, ctrlSeat,
     tryFwd, tryStart, tryBack, trySwap, step7, enum7, feasible7,

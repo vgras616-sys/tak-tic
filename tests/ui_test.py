@@ -50,8 +50,8 @@ with sync_playwright() as p:
         cs = pg.evaluate("TT.ctrlSeat(__tt.G.view, __tt.G.mySeat)")
         kind = d['kind']
         if kind in ('fwd', 'back', 'start'):
-            click_pawn(cs, d['pawn'])
-            sent = pg.evaluate("__tt.G.waiting || __tt.G.view.turn!==__tt.G.mySeat || __tt.G.view.phase!=='play'")
+            n0 = pg.evaluate("__tt.G.view.hands[__tt.G.mySeat].length"); click_pawn(cs, d['pawn'])
+            sent = pg.evaluate("__tt.G.waiting || __tt.G.view.turn!==__tt.G.mySeat || __tt.G.view.phase!=='play' || __tt.G.view.hands[__tt.G.mySeat].length!==%d" % n0)
             if not sent:
                 ok = pg.evaluate("!document.querySelector('#btn-ok').disabled")
                 if not ok:

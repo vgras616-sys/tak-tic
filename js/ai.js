@@ -10,7 +10,7 @@
   // valeur d'un pion selon sa progression
   function pawnValue(p) {
     if (p < 0) return 0;
-    if (p >= RING) return 150 + (p - RING) * 3;
+    if (p >= 65) return 150 + (p - 65) * 3;
     return 22 + p * 1.25;
   }
 
@@ -20,7 +20,7 @@
   function threatOn(S, P, s, i, occ) {
     // probabilité qu'un adversaire mange le pion (s,i) au prochain tour (estimation)
     const x = P[s][i];
-    if (x.p < 0 || x.p >= RING || x.u) return 0;
+    if (x.p < 0 || x.p > 64 || x.u) return 0;
     const myTeam = TT.teamOf(S, s);
     const cell = TT.ringOf(S.slots[s], x.p);
     let safe = 1;
@@ -30,7 +30,7 @@
       if (cell === TT.ringOf(S.slots[t], 0) && P[t].some(y => y.p === -1)) safe *= (1 - 0.55);
       for (let j = 0; j < 4; j++) {
         const y = P[t][j];
-        if (y.p < 0 || y.p >= RING) continue;
+        if (y.p < 0 || y.p > 64) continue;
         const yc = TT.ringOf(S.slots[t], y.p);
         const d = (cell - yc + RING) % RING;   // distance en avant depuis y jusqu'à moi
         const back = (yc - cell + RING) % RING;
@@ -53,13 +53,13 @@
       tot[t] = tot[t] || 0;
       for (let i = 0; i < 4; i++) {
         let v = pawnValue(P[s][i].p);
-        if (level >= 1 && P[s][i].p >= 0 && P[s][i].p < RING && P[s][i].u) v += 6; // un pieu est à l'abri
+        if (level >= 1 && P[s][i].p >= 0 && P[s][i].u) v += 6; // un pieu est à l'abri
         tot[t] += v;
       }
       // un pieu sur sa case de départ gêne l'entrée à la maison
       if (level >= 2) {
         const hasPieu = P[s].some(x => x.u);
-        const closeToHome = P[s].some(x => x.p >= 50 && x.p < RING);
+        const closeToHome = P[s].some(x => x.p >= 50 && x.p <= 64);
         if (hasPieu && closeToHome) tot[t] -= 14;
       }
     }
@@ -120,7 +120,7 @@
       // donner un « démarrer » à un partenaire sans pion sorti est précieux
       if (level >= 2 && (k === '1' || k === '10')) {
         const partner = TT.partnerOf(S, seat);
-        const partnerStarted = S.pawns[partner].some(x => x.p >= 0 && x.p < RING);
+        const partnerStarted = S.pawns[partner].some(x => x.p >= 0 && x.p <= 64);
         if (!partnerStarted && hand.filter(c => c === '1' || c === '10').length >= 1) sc += 40;
       }
       if (sc > bestScore) { bestScore = sc; best = k; }

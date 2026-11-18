@@ -5,9 +5,9 @@ const AI = require('../js/ai.js');
 function check(S) {
   const seen = new Set();
   S.pawns.forEach((a, s) => a.forEach((x, i) => {
-    if (x.p < -1 || x.p > 67) throw new Error('p hors limites');
+    if (x.p < -1 || x.p > 68) throw new Error('p hors limites');
     if (x.u && x.p !== 0) throw new Error('pieu hors case départ');
-    const id = x.p >= 0 && x.p < 64 ? 'r' + TT.ringOf(S.slots[s], x.p) : x.p >= 64 ? 'h' + s + ':' + x.p : null;
+    const id = x.p >= 0 && x.p <= 64 ? 'r' + TT.ringOf(S.slots[s], x.p) : x.p >= 65 ? 'h' + s + ':' + x.p : null;
     if (id) { if (seen.has(id)) throw new Error('deux pions sur ' + id + ' ' + JSON.stringify(S.pawns)); seen.add(id); }
   }));
   const total = S.hands.reduce((n, h) => n + h.length, 0) + S.deck.length + S.discard.length;

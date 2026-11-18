@@ -3,7 +3,7 @@
   'use strict';
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
-  const COLORS = ['#e5484d', '#3e63dd', '#f5a524', '#12a594'];
+  const COLORS = ['#d9291c', '#1f5fd0', '#f2c200', '#1e9b3d'];
   const LEVELS = ['facile', 'moyen', 'difficile'];
   const AI_NAMES = ['', 'Mia', 'Noé', 'Zoé'];
   const SVGNS = 'http://www.w3.org/2000/svg';
@@ -373,22 +373,46 @@
     refresh(true);
   }
 
-  /* ----- géométrie ----- */
-  const CX = 410, CY = 410, R = 275;
-  let rotSlot = 0;
-  const ang = ring => (90 + (ring - rotSlot * TT.SEG) * 360 / TT.RING) * Math.PI / 180;
-  const ringXY = (ring, r) => { const a = ang(ring); return [CX + (r || R) * Math.cos(a), CY + (r || R) * Math.sin(a)]; };
-  function homeXY(v, s, h) { return ringXY(TT.ringOf(v.slots[s], 0), R - 34 * (h + 1)); }
-  function reserveXY(v, s, i) {
-    const a = ang(TT.ringOf(v.slots[s], 0));
-    const rx = Math.cos(a), ry = Math.sin(a), tx = -ry, ty = rx;
-    const base = R + 66, du = ((i % 2) - 0.5) * 30, dv = ((i >> 1) - 0.5) * 30;
-    return [CX + base * rx + du * tx + dv * rx, CY + base * ry + du * ty + dv * ry];
+  /* ----- géométrie : plateau carré en bois, circuit en « carré arrondi » ----- */
+  const CX = 410, CY = 410, HALF = 300, SE_N = 4.4;
+  let rotSlot = 0, SE = null;
+  function buildSE() {
+    const M = 4096, pts = [], cum = [0];
+    let len = 0, prev = null;
+    for (let i = 0; i <= M; i++) {
+      const th = Math.PI / 2 + (i / M) * 2 * Math.PI, c = Math.cos(th), s = Math.sin(th);
+      const x = HALF * Math.sign(c) * Math.pow(Math.abs(c), 2 / SE_N), y = HALF * Math.sign(s) * Math.pow(Math.abs(s), 2 / SE_N);
+      pts.push([x, y]);
+      if (prev) len += Math.hypot(x - prev[0], y - prev[1]);
+      cum.push(len); prev = [x, y];
+    }
+    SE = { pts, cum, len };
   }
+  function loopXY(f) {            // f ∈ [0,1[ : fraction du circuit depuis ma case de départ, sens horaire
+    if (!SE) buildSE();
+    f = ((f % 1) + 1) % 1;
+    const t = f * SE.len;
+    let lo = 0, hi = SE.cum.length - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (SE.cum[m] <= t) lo = m; else hi = m; }
+    const u = (t - SE.cum[lo]) / ((SE.cum[hi] - SE.cum[lo]) || 1);
+    return [SE.pts[lo][0] + (SE.pts[hi][0] - SE.pts[lo][0]) * u, SE.pts[lo][1] + (SE.pts[hi][1] - SE.pts[lo][1]) * u];
+  }
+  const ringXY = ring => {
+    const f = ((((ring - rotSlot * TT.SEG) % TT.RING) + TT.RING) % TT.RING) / TT.RING;
+    const [x, y] = loopXY(f);
+    return [CX + x, CY + y];
+  };
+  const seatRot = (v, s) => ((((v.slots[s] - rotSlot) % 4) + 4) % 4) * 90;    // degrés (sens horaire à l'écran)
+  function rot(x, y, deg) {
+    const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    return [CX + x * c - y * s, CY + x * s + y * c];
+  }
+  const homeXY = (v, s, h) => rot(0, HALF - 44 * (h + 1), seatRot(v, s));
+  const reserveXY = (v, s, i) => rot(-150 + ((i % 2) - 0.5) * 42, HALF - 74 + ((i >> 1) - 0.5) * 42, seatRot(v, s));
   function pawnXY(v, s, x, i) {
     if (x.p < 0) return reserveXY(v, s, i);
-    if (x.p < TT.RING) return ringXY(TT.ringOf(v.slots[s], x.p));
-    return homeXY(v, s, x.p - TT.RING);
+    if (x.p <= TT.LAP) return ringXY(TT.ringOf(v.slots[s], x.p));
+    return homeXY(v, s, x.p - TT.HOME0);
   }
   function el(tag, attrs, parent) {
     const e = document.createElementNS(SVGNS, tag);
@@ -401,46 +425,59 @@
   function buildBoard(v) {
     const svg = $('#board'); svg.innerHTML = '';
     rotSlot = v.slots[G.mySeat];
-    el('circle', { class: 'disc', cx: CX, cy: CY, r: 312 }, svg);
-    el('circle', { class: 'track', cx: CX, cy: CY, r: R }, svg);
+    // --- bois ---
+    const defs = el('defs', {}, svg);
+    const lg = el('linearGradient', { id: 'wood', x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    el('stop', { offset: '0', 'stop-color': '#f0d6a2' }, lg); el('stop', { offset: '.55', 'stop-color': '#e6c58a' }, lg); el('stop', { offset: '1', 'stop-color': '#d9b273' }, lg);
+    const pat = el('pattern', { id: 'grain', width: 120, height: 14, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(-2)' }, defs);
+    el('path', { d: 'M0 4 Q30 1 60 4 T120 4', stroke: 'rgba(120,80,30,.13)', 'stroke-width': 1.4, fill: 'none' }, pat);
+    el('path', { d: 'M0 10 Q40 13 80 10 T120 10', stroke: 'rgba(120,80,30,.09)', 'stroke-width': 1, fill: 'none' }, pat);
+    const hg = el('radialGradient', { id: 'hole', cx: '.4', cy: '.35', r: '.8' }, defs);
+    el('stop', { offset: '0', 'stop-color': '#a8793e' }, hg); el('stop', { offset: '1', 'stop-color': '#cfa466' }, hg);
+    el('rect', { x: 22, y: 22, width: 776, height: 776, rx: 26, fill: 'url(#wood)', stroke: '#b78d4f', 'stroke-width': 5 }, svg);
+    el('rect', { x: 22, y: 22, width: 776, height: 776, rx: 26, fill: 'url(#grain)' }, svg);
+    el('line', { x1: CX, y1: 24, x2: CX, y2: 796, stroke: 'rgba(110,70,25,.28)', 'stroke-width': 3 }, svg);   // pli du plateau
+    el('text', { x: CX, y: CY + 150, 'text-anchor': 'middle', fill: 'rgba(90,55,20,.35)', 'font-weight': 900, 'font-size': 34, 'letter-spacing': 6, transform: `rotate(${0} ${CX} ${CY + 150})` }, svg).textContent = 'TAC★TIK';
+    // --- cabane (maison) et réserve de chaque joueur ---
+    startRings = [];
+    v.slots.forEach((sl, s) => {
+      const deg = seatRot(v, s), col = COLORS[s];
+      const g = el('g', { transform: `translate(${CX},${CY}) rotate(${deg})` }, svg);
+      // maison : 4 trous dans une gouttière colorée
+      el('rect', { x: -21, y: HALF - 44 * 4 - 24, width: 42, height: 44 * 4 + 6, rx: 21, fill: col + '30', stroke: col, 'stroke-width': 4 }, g);
+      for (let h = 0; h < 4; h++) el('circle', { cx: 0, cy: HALF - 44 * (h + 1), r: 12, fill: 'url(#hole)', stroke: col, 'stroke-width': 2.5 }, g);
+      // réserve : grande alvéole où les pions attendent
+      el('rect', { x: -208, y: HALF - 74 - 50, width: 116, height: 100, rx: 22, fill: 'rgba(110,70,25,.22)', stroke: col, 'stroke-width': 5 }, g);
+    });
+    // --- circuit : 64 trous ---
     const startOf = {};
     v.slots.forEach((sl, s) => { startOf[TT.ringOf(sl, 0)] = s; });
     for (let r = 0; r < TT.RING; r++) {
-      const [x, y] = ringXY(r);
-      const s = startOf[r];
-      const c = el('circle', { class: 'cell' + (s != null ? ' start' : ''), cx: x, cy: y, r: s != null ? 16 : 11.5 }, svg);
-      if (s != null) c.style.stroke = COLORS[s];
+      const [x, y] = ringXY(r), s = startOf[r];
+      if (s != null) {
+        el('circle', { cx: x, cy: y, r: 19, fill: 'none', stroke: '#1d1a17', 'stroke-width': 3 }, svg);
+        el('circle', { cx: x, cy: y, r: 14, fill: COLORS[s] + '55', stroke: COLORS[s], 'stroke-width': 3 }, svg);
+      } else el('circle', { cx: x, cy: y, r: 11.5, fill: 'url(#hole)', stroke: '#8b6330', 'stroke-width': 2 }, svg);
     }
-    startRings = [];
     v.slots.forEach((sl, s) => {
-      for (let h = 0; h < 4; h++) {
-        const [x, y] = homeXY(v, s, h);
-        const c = el('circle', { class: 'hcell', cx: x, cy: y, r: 12 }, svg);
-        c.style.stroke = COLORS[s]; c.style.fill = COLORS[s] + '33';
-      }
       const [rx, ry] = ringXY(TT.ringOf(sl, 0));
-      const sr = el('circle', { class: 'startring', cx: rx, cy: ry, r: 22 }, svg);
+      const sr = el('circle', { class: 'startring', cx: rx, cy: ry, r: 25 }, svg);
       sr.style.stroke = COLORS[s]; sr.style.opacity = 0;
       startRings[s] = sr;
-      // plaque de réserve
-      const [px, py] = reserveXY(v, s, 0), [qx, qy] = reserveXY(v, s, 3);
-      const pl = el('circle', { cx: (px + qx) / 2, cy: (py + qy) / 2, r: 38 }, svg);
-      pl.style.fill = COLORS[s] + '22'; pl.style.stroke = COLORS[s]; pl.style.strokeWidth = 2;
     });
-    // noms
+    // --- noms (sur la marge du plateau) ---
     labelEls = [];
     v.slots.forEach((sl, s) => {
-      const a = ang(TT.ringOf(sl, 0));
-      const x = CX + 392 * Math.cos(a), y = CY + 392 * Math.sin(a);
+      const deg = seatRot(v, s);
+      const [x, y] = rot(0, 352, deg);
       const t = el('text', { class: 'lbl', x: 0, y: 0, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, svg);
-      const deg = (((Math.round(a * 180 / Math.PI)) % 360) + 360) % 360;
-      let rot = 0;
-      if (deg === 180) rot = 90; else if (deg === 0) rot = -90;
-      t.setAttribute('transform', `translate(${x},${y}) rotate(${rot})`);
+      const r = deg === 90 ? 90 : deg === 270 ? -90 : 0;   // le nom du haut reste lisible
+      t.setAttribute('transform', `translate(${x},${y}) rotate(${r})`);
       labelEls[s] = t;
     });
     ghostEl = el('circle', { class: 'ghost', r: 14, cx: 0, cy: 0 }, svg);
     ghostEl.style.display = 'none';
+    // --- pions (chevilles de bois vues de dessus) ---
     pawnEls = [];
     v.slots.forEach((sl, s) => {
       pawnEls[s] = [];
@@ -448,10 +485,12 @@
         const g = el('g', { class: 'pawn' }, svg);
         g.dataset.s = s; g.dataset.i = i;
         g.style.transition = 'none';
-        el('circle', { class: 'halo', r: 19 }, g);
+        el('circle', { class: 'halo', r: 20 }, g);
+        el('circle', { class: 'drop', r: 13, cx: 2, cy: 3 }, g);
         const b = el('circle', { class: 'body', r: 12.5 }, g); b.style.fill = COLORS[s];
-        el('circle', { class: 'shade', r: 5, cx: -3, cy: -3 }, g).style.fill = 'rgba(255,255,255,.35)';
-        el('circle', { class: 'pieu', r: 17 }, g);
+        el('circle', { class: 'top', r: 7 }, g);
+        el('circle', { class: 'shade', r: 3.5, cx: -3.5, cy: -3.5 }, g);
+        el('circle', { class: 'pieu', r: 18 }, g);
         pawnEls[s][i] = g;
       }
     });

@@ -34,8 +34,9 @@ class Bot:
         d = random.choice(st['acts']); self.click_card(d['k'])
         cs = pg.evaluate("TT.ctrlSeat(__tt.G.view, __tt.G.mySeat)")
         k = d['kind']
+        n0 = pg.evaluate("__tt.G.view.hands[__tt.G.mySeat].length")
         def confirm_if_needed():
-            done = pg.evaluate("__tt.G.waiting || __tt.G.view.turn!==__tt.G.mySeat || __tt.G.view.phase!=='play'")
+            done = pg.evaluate("__tt.G.waiting || __tt.G.view.turn!==__tt.G.mySeat || __tt.G.view.phase!=='play' || __tt.G.view.hands[__tt.G.mySeat].length!==%d" % n0)
             if not done: pg.click('#btn-ok')
         if k in ('fwd', 'back', 'start'): self.click_pawn(cs, d['pawn']); confirm_if_needed()
         elif k == 'swap': self.click_pawn(cs, d['pawn']); self.click_pawn(d['tseat'], d['tpawn']); pg.click('#btn-ok')

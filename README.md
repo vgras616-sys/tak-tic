@@ -29,3 +29,8 @@ Si un ami est derrière un réseau très restrictif, la connexion peut échouer 
 Les règles de Tac Tik varient selon les boîtes ; voir « Règles du jeu » dans le menu. Choix d'implémentation :
 48 cartes (4 × chaque valeur : 1, 2, 3, 5, 6, 8, 9, 10, 12, −4, Permuter, 7×1), 4 cartes par joueur et par donne,
 si aucun coup n'est possible, toute la main est défaussée automatiquement, échange d'une carte entre partenaires à chaque donne (désactivable).
+
+## Détail des règles de déplacement
+- Un tour = 64 cases ; la case de départ compte pour une case avant la maison (4 cases : la cabane).
+- Carte trop grande pour la maison (ou entrée bloquée) : le pion continue et repart pour un tour.
+- 7×1 : sur sa case de départ, un pion entre dans la maison si la place est libre, sinon repart pour un tour.
