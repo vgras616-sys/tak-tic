@@ -60,28 +60,36 @@
     for (let i = 1; i < n; i++) s.push({ type: 'ai', level: 1 });
     return s;
   }
+  const PRESETS = {
+    duel: { mode: 'duel', seats: ['me', 'ai1'] },                         // toi contre 1 IA
+    vsai: { mode: 'teams', seats: ['me', 'ai1', 'friend', 'ai1'] },       // toi + un ami contre 2 IA
+    t22:  { mode: 'teams', seats: ['me', 'friend', 'friend', 'friend'] }, // toi + un ami contre 2 amis
+    ffa:  { mode: 'ffa', seats: ['me', 'ai1', 'ai1', 'ai1'] }             // 4 joueurs chacun pour soi
+  };
   function openLobby() {
     G.role = 'host';
-    G.mode = G.mode || 'teams';
-    applyMode(G.mode, true);
+    applyPreset(G.preset || 'duel');
     $('#lobby-title').textContent = 'Nouvelle partie';
     $('#lobby-host').classList.remove('hidden');
     $('#lobby-client').classList.add('hidden');
     show('lobby');
   }
-  function applyMode(mode, fresh) {
-    G.mode = mode;
-    const { n } = modeOpts(mode);
-    const old = G.seats;
-    G.seats = defaultSeats(n);
-    if (!fresh) for (let i = 1; i < n && i < old.length; i++) G.seats[i] = old[i];
-    $$('#mode-seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
-    $('#swap-row').classList.toggle('hidden', mode !== 'teams');
-    // un ami retiré par le changement de mode est prévenu
-    if (old.length > n) for (let i = n; i < old.length; i++) kick(old[i]);
+  function applyPreset(p) {
+    const P = PRESETS[p];
+    G.seats.forEach(kick);
+    G.preset = p; G.mode = P.mode;
+    G.seats = P.seats.map(t => (t === 'me' ? { type: 'me' } : t === 'friend' ? { type: 'friend' } : { type: 'ai', level: +t.slice(2) }));
+    $$('#mode-seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === p));
+    $('#swap-row').classList.toggle('hidden', G.mode !== 'teams');
+    if (G.seats.some(s => s.type === 'friend')) {
+      if (typeof Peer === 'undefined') {
+        toast('Mode ami indisponible : connexion requise');
+        G.seats = G.seats.map(s => (s.type === 'friend' ? { type: 'ai', level: 1 } : s));
+      } else ensureHost();
+    }
     renderSeats();
   }
-  $$('#mode-seg button').forEach(b => b.onclick = () => applyMode(b.dataset.mode, false));
+  $$('#mode-seg button').forEach(b => b.onclick = () => applyPreset(b.dataset.mode));
   $('#opt-swap').onchange = e => { G.swap = e.target.checked; };
   $('#lobby-back').onclick = () => { leaveAll(); show('menu'); };
 
@@ -679,5 +687,5 @@
     $('#join-code').value = q.toUpperCase();
     joinRoom(q.toUpperCase());
   }
-  window.__tt = { G, ui, startGame, applyMode };
+  window.__tt = { G, ui, startGame, applyPreset };
 })();

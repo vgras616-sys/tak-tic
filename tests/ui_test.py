@@ -2,7 +2,7 @@
 import sys, json, random
 from playwright.sync_api import sync_playwright
 
-MODE = sys.argv[1] if len(sys.argv) > 1 else 'teams'
+MODE = {'teams':'vsai','duel':'duel','ffa':'ffa'}.get(sys.argv[1], sys.argv[1]) if len(sys.argv) > 1 else 'duel'
 W, H = (int(sys.argv[2]), int(sys.argv[3])) if len(sys.argv) > 3 else (1100, 900)
 SHOT = sys.argv[4] if len(sys.argv) > 4 else '/tmp/shot'
 
@@ -13,7 +13,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errors.append(str(e)))
     pg.on('console', lambda m: errors.append(m.text) if m.type == 'error' and 'peerjs' not in m.text and 'ERR_' not in m.text else None)
     pg.add_init_script("const st=window.setTimeout;window.setTimeout=(f,t,...a)=>st(f,(t||0)*0.04,...a);")
-    pg.goto('file:///home/claude/tac-tik/index.html')
+    pg.goto('file:///home/claude/tak-tic/index.html')
     pg.fill('#name', 'Victor')
     pg.click('#btn-new')
     pg.click(f'#mode-seg button[data-mode="{MODE}"]')

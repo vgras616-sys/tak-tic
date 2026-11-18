@@ -2,13 +2,13 @@
 import sys, json, random, threading, http.server, socketserver, functools
 from playwright.sync_api import sync_playwright
 
-MODE = sys.argv[1] if len(sys.argv) > 1 else 'duel'
-Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory='/home/claude/tac-tik')
+MODE = {'teams':'vsai','duel':'duel','ffa':'ffa'}.get(sys.argv[1], sys.argv[1]) if len(sys.argv) > 1 else 'duel'
+Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory='/home/claude/tak-tic')
 Handler.log_message = lambda *a, **k: None
 socketserver.TCPServer.allow_reuse_address = True
 srv = socketserver.TCPServer(('127.0.0.1', 8765), Handler)
 threading.Thread(target=srv.serve_forever, daemon=True).start()
-stub = open('/home/claude/tac-tik/tests/peer_stub.js').read()
+stub = open('/home/claude/tak-tic/tests/peer_stub.js').read()
 errors = []
 
 class Bot:
@@ -55,7 +55,9 @@ with sync_playwright() as p:
         pg.add_init_script(fast)
     A.goto('http://127.0.0.1:8765/index.html'); A.fill('#name', 'Hôte'); A.click('#btn-new')
     A.click(f'#mode-seg button[data-mode="{MODE}"]')
-    A.select_option('#seats .seat:nth-child(2) select', 'friend')       # siège 1 = ami
+    for n in (3, 4):
+        if A.query_selector(f'#seats .seat:nth-child({n}) select'): A.select_option(f'#seats .seat:nth-child({n}) select', 'ai1')
+    A.select_option('#seats .seat:nth-child(2) select', 'friend')       # siège 1 = seul ami
     A.wait_for_function("document.querySelector('#room-code').textContent.length===5")
     code = A.inner_text('#room-code'); print('code salle', code)
     assert A.evaluate("document.querySelector('#btn-start').disabled"), 'start doit être bloqué'
