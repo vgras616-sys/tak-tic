@@ -167,6 +167,7 @@
   }
   $('#copy-link').onclick = () => {
     const url = location.origin + location.pathname + '?room=' + G.code;
+    if (navigator.share) { navigator.share({ title: 'Tac Tik', text: 'Rejoins ma partie de Tac Tik !', url }).catch(() => {}); return; }
     (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(
       () => toast('Lien copié !'), () => prompt('Copie ce lien :', url));
   };
