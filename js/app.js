@@ -64,7 +64,6 @@
     solo: { mode: 'teams', seats: ['me', 'ai1', 'ai1', 'ai1'] },           // toi + 1 IA contre 2 IA
     vsai: { mode: 'teams', seats: ['me', 'ai1', 'friend', 'ai1'] },       // toi + un ami contre 2 IA
     t22:  { mode: 'teams', seats: ['me', 'friend', 'friend', 'friend'] }, // toi + un ami contre 2 amis
-    ffa:  { mode: 'ffa', seats: ['me', 'ai1', 'ai1', 'ai1'] }             // 4 joueurs chacun pour soi
   };
   function openLobby() {
     G.role = 'host';
