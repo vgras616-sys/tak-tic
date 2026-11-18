@@ -295,7 +295,9 @@
       turn: 0, phase: 'play', swapChoice: [], winner: null, last: null, deals: 0, turns: 0
     };
     S.pawns = S.slots.map(() => Array.from({ length: 4 }, () => ({ p: -1, u: false })));
+    S.events = [];
     deal(S);
+    autoPass(S);
     return S;
   }
   function deal(S) {
@@ -318,6 +320,7 @@
       for (let s = 0; s < S.n; s++) S.hands[s].splice(S.hands[s].indexOf(give[s]), 1);
       for (let s = 0; s < S.n; s++) S.hands[partnerOf(S, s)].push(give[s]);
       S.swapChoice = []; S.phase = 'play';
+      autoPass(S);
     }
     return true;
   }
@@ -329,6 +332,22 @@
     for (let s = 0; s < S.n; s++) if (allHome(S.pawns, s)) return s;
     return null;
   }
+  // Règle : si le joueur dont c'est le tour n'a aucun coup possible, il défausse toute sa main
+  // automatiquement et on passe au suivant (un joueur sans carte est sauté).
+  function autoPass(S) {
+    S.events = S.events || [];
+    for (let guard = 0; guard < 500 && S.phase === 'play'; guard++) {
+      if (S.hands.every(h => h.length === 0)) { deal(S); continue; }
+      const seat = S.turn, hand = S.hands[seat];
+      if (hand.length && legalActions(S, seat).length) return;
+      if (hand.length) {
+        S.events.push({ seat, n: hand.length });
+        S.discard.push(...hand); S.hands[seat] = [];
+      }
+      S.turn = (S.turn + 1) % S.n;
+    }
+  }
+
   // joue l'action `d` pour le joueur dont c'est le tour. Retourne {ok, err}
   function play(S, seat, d) {
     if (S.phase !== 'play') return { ok: false, err: 'phase' };
@@ -345,6 +364,7 @@
     if (w != null) { S.phase = 'over'; S.winner = w; return { ok: true }; }
     S.turn = (S.turn + 1) % S.n;
     if (S.hands.every(h => h.length === 0)) deal(S);
+    autoPass(S);
     return { ok: true };
   }
 
@@ -353,6 +373,6 @@
     ringOf, progOf, clonePawns, key, buildOcc, allHome, homeFree,
     partnerOf, teamOf, ctrlSeat,
     tryFwd, tryStart, tryBack, trySwap, step7, enum7, feasible7,
-    resolve, legalActions, newGame, deal, setSwap, winnerOf, play
+    resolve, legalActions, newGame, deal, setSwap, winnerOf, play, autoPass
   };
 });

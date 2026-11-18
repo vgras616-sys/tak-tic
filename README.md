@@ -28,4 +28,4 @@ Si un ami est derrière un réseau très restrictif, la connexion peut échouer 
 ## Règles retenues
 Les règles de Tac Tik varient selon les boîtes ; voir « Règles du jeu » dans le menu. Choix d'implémentation :
 48 cartes (4 × chaque valeur : 1, 2, 3, 5, 6, 8, 9, 10, 12, −4, Permuter, 7×1), 4 cartes par joueur et par donne,
-carte à défausser si aucun coup possible, échange d'une carte entre partenaires à chaque donne (désactivable).
+si aucun coup n'est possible, toute la main est défaussée automatiquement, échange d'une carte entre partenaires à chaque donne (désactivable).

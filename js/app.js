@@ -219,12 +219,12 @@
   function startGame() {
     const o = modeOpts(G.mode);
     const S = TT.newGame({ n: o.n, teams: o.teams, swap: G.mode === 'teams' && G.swap });
-    S.turn = Math.floor(Math.random() * S.n);
+    S.turn = Math.floor(Math.random() * S.n); TT.autoPass(S);
     S.names = G.seats.map((s, i) => seatDisplayName(i));
     S.conn = G.seats.map(s => s.type !== 'friend' || !!s.connected);
     S.log = [];
     G.S = S; G.role = 'host'; G.mySeat = 0; G.waiting = false;
-    S.log.push({ n: '', t: 'Nouvelle partie — ' + S.names[S.turn] + ' commence.' });
+    S.log.push({ n: '', t: 'Nouvelle partie — ' + S.names[S.turn] + ' commence.' }); drainEvents();
     resetUI(); G.boardKey = null;
     show('game'); modal('#over', false);
     pushViews(); tick();
@@ -258,6 +258,11 @@
     if (cap) t += ' et mange ' + cap + ' pion' + (cap > 1 ? 's' : '');
     return t + '.';
   }
+  function drainEvents() {
+    const S = G.S;
+    (S.events || []).forEach(ev => S.log.push({ n: S.names[ev.seat], t: 'n’a aucun coup possible : sa main (' + ev.n + ' carte' + (ev.n > 1 ? 's' : '') + ') est défaussée.' }));
+    S.events = [];
+  }
   function hostAct(seat, d) {
     const S = G.S;
     if (!S || S.phase !== 'play' || S.turn !== seat) return;
@@ -267,6 +272,7 @@
     let cap = 0;
     before.forEach((a, s) => a.forEach((x, i) => { if (x.p >= 0 && S.pawns[s][i].p === -1) cap++; }));
     S.log.push({ n: S.names[seat], t: describe(S.last.d, cap) });
+    drainEvents();
     pushViews(); tick();
   }
   function hostSwap(seat, k) {
@@ -274,6 +280,7 @@
     if (!S || S.phase !== 'swap') return;
     if (!TT.setSwap(S, seat, k)) return;
     if (S.phase === 'play') S.log.push({ n: '', t: 'Cartes échangées entre partenaires.' });
+    drainEvents();
     pushViews(); tick();
   }
   const isAI = seat => G.seats[seat].type === 'ai';
@@ -301,6 +308,7 @@
       if (isAI(s) && S.swapChoice[s] == null) TT.setSwap(S, s, TTAI.chooseSwap(S, s, G.seats[s].level));
     }
     if (S.phase === 'play') S.log.push({ n: '', t: 'Cartes échangées entre partenaires.' });
+    drainEvents();
     pushViews(); tick();
   }
 
