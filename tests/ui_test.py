@@ -2,7 +2,7 @@
 import sys, json, random
 from playwright.sync_api import sync_playwright
 
-MODE = {'teams':'vsai','duel':'duel','ffa':'ffa'}.get(sys.argv[1], sys.argv[1]) if len(sys.argv) > 1 else 'duel'
+MODE = {'teams':'solo','duel':'duel','ffa':'ffa'}.get(sys.argv[1], sys.argv[1]) if len(sys.argv) > 1 else 'duel'
 W, H = (int(sys.argv[2]), int(sys.argv[3])) if len(sys.argv) > 3 else (1100, 900)
 SHOT = sys.argv[4] if len(sys.argv) > 4 else '/tmp/shot'
 
