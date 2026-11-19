@@ -25,7 +25,9 @@ function playGame(n, teams, levels, maxTurns = 4000) {
     }
     const seat = S.turn;
     const d = AI.chooseAction(S, seat, levels[seat]);
+    const before = S.pawns.map(a => a.map(x => ({ ...x })));
     const r = TT.play(S, seat, d);
+    before.forEach((a, s) => a.forEach((x, i) => { if (x.u && S.pawns[s][i].p === -1) throw new Error('pieu mangé ! ' + JSON.stringify(d)); }));
     if (!r.ok) throw new Error('action refusée ' + JSON.stringify(d) + ' ' + r.err);
     check(S);
   }

@@ -88,7 +88,9 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 #board .pawn .drop{fill:rgba(60,35,10,.35)}
 #board .pawn .top{fill:rgba(255,255,255,.22)}
 #board .pawn .shade{fill:rgba(255,255,255,.55)}
-#board .pawn .pieu{fill:none;stroke:#fff;stroke-width:3;stroke-dasharray:3 3}
+#board .pawn .pieu{fill:none;stroke:#fff;stroke-width:4}
+#board .pawn .pieuo{fill:none;stroke:#2a1d12;stroke-width:1.6}
+#board .pawn .shield{fill:#fff;stroke:#2a1d12;stroke-width:1.4}
 #board .pawn.hl{cursor:pointer}
 #board .pawn.hl .halo{display:block}
 #board .halo{display:none;fill:none;stroke:var(--accent);stroke-width:4;animation:pulse 1s infinite}

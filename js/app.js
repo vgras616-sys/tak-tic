@@ -485,7 +485,9 @@
         const b = el('circle', { class: 'body', r: 12.5 }, g); b.style.fill = COLORS[s];
         el('circle', { class: 'top', r: 7 }, g);
         el('circle', { class: 'shade', r: 3.5, cx: -3.5, cy: -3.5 }, g);
-        el('circle', { class: 'pieu', r: 18 }, g);
+        el('circle', { class: 'pieuo', r: 21 }, g);
+        el('circle', { class: 'pieu', r: 18.5 }, g);
+        el('path', { class: 'shield', d: 'M0,-8 L7,-5 V0 C7,5 3.5,8 0,10 C-3.5,8 -7,5 -7,0 V-5 Z' }, g);
         pawnEls[s][i] = g;
       }
     });
@@ -615,7 +617,7 @@
         const x = P[s][i], g = pawnEls[s][i];
         const [px, py] = pawnXY(v, s, x, i);
         g.style.transform = `translate(${px}px,${py}px)`;
-        g.querySelector('.pieu').style.display = x.u ? 'block' : 'none';
+        ['.pieu', '.pieuo', '.shield'].forEach(q => { g.querySelector(q).style.display = x.u ? 'block' : 'none'; });
         const k = s + ':' + i;
         g.classList.toggle('hl', hl.hl.has(k) || hl.tgt.has(k));
         g.classList.toggle('sel', hl.sel.has(k));

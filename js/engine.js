@@ -111,7 +111,7 @@
     if (y.u && t !== s) return false;
     return true;
   }
-  // un pas de la carte 7x1 : mange tout sur son passage, pieux compris
+  // un pas de la carte 7x1 : mange les pions qu'il rencontre (jamais un pieu)
   function step7(P, slots, s, i) {
     const x = P[s][i], p = x.p;
     if (p < 0) return null;
@@ -123,12 +123,13 @@
     } else if (p < LAP) {
       q = p + 1;
       const o = occ[ringOf(slots[s], q)];
-      if (o && !(o[0] === s && o[1] === i)) cap = o;
+      if (o && !(o[0] === s && o[1] === i)) { if (P[o[0]][o[1]].u) return null; cap = o; }   // un pieu est intouchable, même pour le 7×1
     } else if (homeFree(P, s, HOME0, HOME0)) {
       q = HOME0;                                    // sur sa case départ : entre dans la maison
     } else {
       q = 1;                                        // maison bloquée : repart pour un tour
       cap = occ[ringOf(slots[s], 1)];
+      if (cap && P[cap[0]][cap[1]].u) return null;
     }
     const Q = clonePawns(P);
     kill(Q, cap);
@@ -194,7 +195,7 @@
         const r = tryStart(P, slots, occ, cs, i);
         if (!r) return null;
         kill(Q, r.cap);
-        Q[cs][i].p = 0; Q[cs][i].u = false;   // plus de pieu : un pion qui sort peut être mangé/dépassé
+        Q[cs][i].p = 0; Q[cs][i].u = true;    // pion qui sort = pieu (intouchable tant qu'il n'a pas bougé)
         return { d: { k: d.k, kind: 'start', pawn: i }, Q };
       }
       case 'back': {
@@ -257,7 +258,7 @@
             const r = tryStart(P, slots, occ, cs, i);
             if (r) {
               const Q = clonePawns(P); kill(Q, r.cap);
-              Q[cs][i].p = 0; Q[cs][i].u = false;   // plus de pieu : un pion qui sort peut être mangé/dépassé
+              Q[cs][i].p = 0; Q[cs][i].u = true;    // pion qui sort = pieu (intouchable tant qu'il n'a pas bougé)
               out.push({ d: { k, kind: 'start', pawn: i }, Q });
             }
           }
