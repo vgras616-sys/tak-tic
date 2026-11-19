@@ -374,28 +374,23 @@
   }
 
   /* ----- géométrie : plateau carré en bois, circuit en « carré arrondi » ----- */
-  const CX = 410, CY = 410, HALF = 300, SE_N = 4.4;
-  let rotSlot = 0, SE = null;
-  function buildSE() {
-    const M = 4096, pts = [], cum = [0];
-    let len = 0, prev = null;
-    for (let i = 0; i <= M; i++) {
-      const th = Math.PI / 2 + (i / M) * 2 * Math.PI, c = Math.cos(th), s = Math.sin(th);
-      const x = HALF * Math.sign(c) * Math.pow(Math.abs(c), 2 / SE_N), y = HALF * Math.sign(s) * Math.pow(Math.abs(s), 2 / SE_N);
-      pts.push([x, y]);
-      if (prev) len += Math.hypot(x - prev[0], y - prev[1]);
-      cum.push(len); prev = [x, y];
+  const CX = 410, CY = 410, HALF = 300, CORNER = 120;
+  let rotSlot = 0;
+  // circuit = carré aux coins arrondis ; un quart (de milieu de côté à milieu de côté) = 16 cases
+  const QA = HALF - CORNER, QARC = Math.PI / 2 * CORNER, QLEN = 2 * QA + QARC;
+  function quarterXY(u) {          // point à la distance u le long du quart de base : (0,H) → (−H,0)
+    if (u <= QA) return [-u, HALF];
+    if (u <= QA + QARC) {
+      const phi = Math.PI / 2 + (u - QA) / CORNER;
+      return [-QA + CORNER * Math.cos(phi), QA + CORNER * Math.sin(phi)];
     }
-    SE = { pts, cum, len };
+    return [-HALF, QA - (u - QA - QARC)];
   }
   function loopXY(f) {            // f ∈ [0,1[ : fraction du circuit depuis ma case de départ, sens horaire
-    if (!SE) buildSE();
     f = ((f % 1) + 1) % 1;
-    const t = f * SE.len;
-    let lo = 0, hi = SE.cum.length - 1;
-    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (SE.cum[m] <= t) lo = m; else hi = m; }
-    const u = (t - SE.cum[lo]) / ((SE.cum[hi] - SE.cum[lo]) || 1);
-    return [SE.pts[lo][0] + (SE.pts[hi][0] - SE.pts[lo][0]) * u, SE.pts[lo][1] + (SE.pts[hi][1] - SE.pts[lo][1]) * u];
+    const q = Math.min(3, Math.floor(f * 4 + 1e-9)), u = (f * 4 - q) * QLEN;
+    const [x, y] = quarterXY(u), a = q * Math.PI / 2, c = Math.cos(a), s = Math.sin(a);
+    return [x * c - y * s, x * s + y * c];
   }
   const ringXY = ring => {
     const f = ((((ring - rotSlot * TT.SEG) % TT.RING) + TT.RING) % TT.RING) / TT.RING;
