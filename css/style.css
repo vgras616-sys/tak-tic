@@ -65,7 +65,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 .deckinfo{color:var(--muted);font-weight:700;min-width:3.4rem;text-align:right}
 .board-wrap{position:relative;flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
 #board{height:100%;width:100%;max-width:min(100vw,980px);max-height:100%;display:block}
-.center-info{margin-top:-6%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;color:#4a3b1c;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:clamp(.7rem,2.2vw,.95rem)}
+.center-info{display:none;margin-top:-6%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;color:#4a3b1c;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:clamp(.7rem,2.2vw,.95rem)}
 .mini{width:2.4em;aspect-ratio:3/4;border-radius:6px;background:#fffaf0;border:2px solid #4a3b1c;display:flex;align-items:center;justify-content:center;font-size:1.3em;color:#4a3b1c}
 .log{flex:none;width:100%;max-width:760px;text-align:center;color:var(--muted);font-size:.88rem;min-height:2.4em;padding:0 .8rem;line-height:1.25}
 .log b{color:var(--ink)}

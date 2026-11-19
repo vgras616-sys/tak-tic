@@ -415,7 +415,7 @@
     if (parent) parent.appendChild(e);
     return e;
   }
-  let pawnEls = [], labelEls = [], startRings = [], ghostEl = null;
+  let pawnEls = [], labelEls = [], startRings = [], ghostEl = null, deckTxt = null, discardTxt = null, distTxt = null;
 
   function buildBoard(v) {
     const svg = $('#board'); svg.innerHTML = '';
@@ -470,6 +470,20 @@
       t.setAttribute('transform', `translate(${x},${y}) rotate(${r})`);
       labelEls[s] = t;
     });
+    // --- pioche et défausse, au centre du plateau ---
+    const cw = 54, ch = 76;
+    const cg = el('g', { class: 'piles' }, svg);
+    const pdef = el('pattern', { id: 'cardback', width: 10, height: 10, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
+    el('rect', { width: 10, height: 10, fill: '#2c4b8f' }, pdef); el('rect', { width: 5, height: 10, fill: '#25407a' }, pdef);
+    for (let k = 3; k >= 0; k--) {
+      el('rect', { x: CX - 36 - cw / 2 + k * 1.6, y: CY - ch / 2 - k * 1.6, width: cw, height: ch, rx: 7, fill: 'url(#cardback)', stroke: '#f6efe0', 'stroke-width': 3 }, cg);
+    }
+    deckTxt = el('text', { x: CX - 36, y: CY + 6, 'text-anchor': 'middle', 'font-weight': 900, 'font-size': 22, fill: '#fff', stroke: '#14254d', 'stroke-width': 3, 'paint-order': 'stroke' }, cg);
+    el('rect', { x: CX + 36 - cw / 2, y: CY - ch / 2, width: cw, height: ch, rx: 7, fill: '#fffaf0', stroke: '#6b5530', 'stroke-width': 2.5 }, cg);
+    discardTxt = el('text', { x: CX + 36, y: CY + 9, 'text-anchor': 'middle', 'font-weight': 900, 'font-size': 26, fill: '#2b2113' }, cg);
+    const cap = (x, y, t) => { const e = el('text', { x, y, 'text-anchor': 'middle', 'font-weight': 800, 'font-size': 13, fill: '#5a4220' }, cg); e.textContent = t; return e; };
+    cap(CX - 36, CY + 58, 'Pioche'); cap(CX + 36, CY + 58, 'Défausse');
+    distTxt = cap(CX, CY - 54, '');
     ghostEl = el('circle', { class: 'ghost', r: 14, cx: 0, cy: 0 }, svg);
     ghostEl.style.display = 'none';
     // --- pions (chevilles de bois vues de dessus) ---
@@ -655,12 +669,13 @@
       st.textContent = 'Tour de ' + v.names[v.turn] + (v.conn && v.conn[v.turn] === false ? ' (déconnecté)' : '');
     }
     $('#deck-n').textContent = v.deckN;
-    // centre
-    const ci = $('#center-info'); ci.innerHTML = '';
-    const mini = document.createElement('div'); mini.className = 'mini';
-    mini.textContent = v.discardTop ? (KLABEL[v.discardTop] || v.discardTop) : '·';
-    const cap = document.createElement('div'); cap.textContent = 'Distribution n° ' + v.deals;
-    ci.append(mini, cap);
+    // centre : pioche (cartes restantes) et dernière carte défaussée
+    deckTxt.textContent = v.deckN;
+    const dk = v.discardTop;
+    discardTxt.textContent = dk ? (KLABEL[dk] || dk) : '·';
+    discardTxt.setAttribute('fill', dk === '-4' ? '#c43b3f' : dk === 'P' ? '#7a3fd0' : dk === '7' ? '#c27a00' : (dk === '1' || dk === '10') ? '#12805f' : '#2b2113');
+    discardTxt.setAttribute('font-size', dk === '7' || dk === '10' || dk === '12' ? 22 : 26);
+    distTxt.textContent = 'Distribution n° ' + v.deals;
     // journal
     const lg = $('#log'); lg.innerHTML = '';
     (v.log || []).slice(-2).forEach(l => {
