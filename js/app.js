@@ -657,7 +657,7 @@
     const ci = $('#center-info'); ci.innerHTML = '';
     const mini = document.createElement('div'); mini.className = 'mini';
     mini.textContent = v.discardTop ? (KLABEL[v.discardTop] || v.discardTop) : '·';
-    const cap = document.createElement('div'); cap.textContent = 'Donne n° ' + v.deals;
+    const cap = document.createElement('div'); cap.textContent = 'Distribution n° ' + v.deals;
     ci.append(mini, cap);
     // journal
     const lg = $('#log'); lg.innerHTML = '';
