@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2a1e18">
 <title>Tac Tik — jeu en ligne</title>
-<link rel="stylesheet" href="css/style.css?v=1795076129">
+<link rel="stylesheet" href="css/style.css?v=1795076510">
 </head>
 <body>
 
@@ -113,14 +113,13 @@
       <p><b>But :</b> faire entrer ses 4 pions dans sa maison. Par équipe, les deux partenaires doivent tous les faire rentrer ; un joueur qui a fini joue alors avec les pions de son partenaire.</p>
       <p><b>Tour de jeu :</b> chacun a 4 cartes, joue une carte par tour (obligatoire s'il y a un coup possible), puis on redistribue quand les mains sont vides. Si aucune carte n'est jouable, toute la main est défaussée automatiquement et on passe.</p>
       <ul>
-        <li><b>1 et 10</b> : sortir un pion (il devient un <i>pieu</i> sur sa case de départ) ou avancer de 1 / 10.</li>
+        <li><b>1 et 10</b> : sortir un pion sur sa case de départ (s'il y a un pion adverse, il est mangé) ou avancer de 1 / 10.</li>
         <li><b>2, 3, 5, 6, 8, 9, 12</b> : avancer d'autant de cases (sens horaire).</li>
         <li><b>−4</b> : reculer de 4 cases (jamais directement dans la maison).</li>
-        <li><b>Permuter</b> : échanger un de tes pions (ou ton pieu) avec un autre pion du circuit, adverse ou à toi.</li>
-        <li><b>7×1</b> : 7 pas d'une case, répartis comme tu veux entre tes pions ; ils mangent tout sur leur passage (y compris les pieux).</li>
+        <li><b>Permuter</b> : échanger un de tes pions avec un autre pion du circuit, adverse ou à toi.</li>
+        <li><b>7×1</b> : 7 pas d'une case, répartis comme tu veux entre tes pions ; ils mangent tout sur leur passage.</li>
       </ul>
       <p><b>Manger :</b> finir son déplacement exactement sur un pion le renvoie en réserve (même un pion de ton équipe !).</p>
-      <p><b>Pieu :</b> un pion qui vient de sortir est un pieu tant qu'il n'a pas bougé : on ne peut ni le dépasser, ni le manger, ni le permuter (sauf son propriétaire). Ton propre pieu bloque aussi ton accès à la maison.</p>
       <p><b>Maison (cabane) :</b> après un tour complet, ta case de départ compte pour une case, puis viennent les 4 cases de la maison. Si la carte t'emmène plus loin que la maison (ou si la place est prise), ton pion repart simplement pour un nouveau tour. Dans la maison, on ne dépasse pas un autre pion.</p>
       <p class="hint">Les règles de Tac Tik varient selon les boîtes : ce sont celles-ci qui sont appliquées dans le jeu.</p>
     </div>
@@ -131,9 +130,9 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="js/engine.js?v=1795076129"></script>
-<script src="js/ai.js?v=1795076129"></script>
-<script src="js/net.js?v=1795076129"></script>
-<script src="js/app.js?v=1795076129"></script>
+<script src="js/engine.js?v=1795076510"></script>
+<script src="js/ai.js?v=1795076510"></script>
+<script src="js/net.js?v=1795076510"></script>
+<script src="js/app.js?v=1795076510"></script>
 </body>
 </html>

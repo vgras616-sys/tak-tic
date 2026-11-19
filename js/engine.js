@@ -88,7 +88,7 @@
   function tryStart(P, slots, occ, s, i) {
     if (P[s][i].p !== -1) return null;
     const o = occ[ringOf(slots[s], 0)];
-    if (o && P[o[0]][o[1]].u) return null;  // son propre pieu bloque la sortie
+    if (o && o[0] === s) return null;       // un de ses propres pions occupe déjà sa case de départ
     return { cap: o };
   }
   function tryBack(P, slots, occ, s, i) {
@@ -194,7 +194,7 @@
         const r = tryStart(P, slots, occ, cs, i);
         if (!r) return null;
         kill(Q, r.cap);
-        Q[cs][i].p = 0; Q[cs][i].u = true;
+        Q[cs][i].p = 0; Q[cs][i].u = false;   // plus de pieu : un pion qui sort peut être mangé/dépassé
         return { d: { k: d.k, kind: 'start', pawn: i }, Q };
       }
       case 'back': {
@@ -257,7 +257,7 @@
             const r = tryStart(P, slots, occ, cs, i);
             if (r) {
               const Q = clonePawns(P); kill(Q, r.cap);
-              Q[cs][i].p = 0; Q[cs][i].u = true;
+              Q[cs][i].p = 0; Q[cs][i].u = false;   // plus de pieu : un pion qui sort peut être mangé/dépassé
               out.push({ d: { k, kind: 'start', pawn: i }, Q });
             }
           }
